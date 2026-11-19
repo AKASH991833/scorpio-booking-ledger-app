@@ -4,7 +4,7 @@ A personal, fully offline Android booking ledger for a Mahindra Scorpio S11 rent
 
 ## Features
 
-- **Bookings** - customer name, mobile, address, booking type (Wedding / Tour / Travel / Other), single date or date range, pickup and drop locations, total amount, advance paid, notes. Balance is auto-calculated.
+- **Bookings** - a premium sectioned form (Customer / Trip / Payment / Driver): customer name, mobile, address, booking type (Wedding / Tour / Travel / Other), date tiles with pickers for a single date or range, pickup and drop locations, big amount inputs with a live balance and paid-progress bar, driver details, notes. Balance is auto-calculated. Booking cards in lists carry type icons; the detail view shows a hero trip card with the full payment progress.
 - **Double-booking alert** - saving a booking that clashes with an existing one pops a warning showing exactly which booking it clashes with.
 - **Calendar view** - month grid with booked days marked; days with more than one booking are flagged; tap any day to see its bookings.
 - **Dashboard** - total booked value, advance received, balance pending, total bookings, and the next 5 upcoming bookings at a glance.

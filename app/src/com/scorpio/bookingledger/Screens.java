@@ -21,6 +21,11 @@ public class Screens {
         card.setOrientation(LinearLayout.HORIZONTAL);
         card.setGravity(Gravity.CENTER_VERTICAL);
 
+        TextView tile = Ui.tv(a, typeIcon(b.type), 16, Ui.text, Ui.medium());
+        tile.setGravity(Gravity.CENTER);
+        tile.setBackground(Ui.round(Ui.fieldBg, Ui.dp(a, 10)));
+        card.addView(tile, Ui.lp(Ui.dp(a, 38), Ui.dp(a, 38)));
+
         LinearLayout left = Ui.vcol(a);
         left.addView(Ui.tv(a, b.name, 16, Ui.text, Typeface.DEFAULT_BOLD));
         TextView dates = Ui.tv(a, Dates.range(b.start, b.end), 12, Ui.sub, Ui.medium());
@@ -35,9 +40,17 @@ public class Screens {
         right.addView(Ui.chip(a, b.status()));
 
         card.addView(left, Ui.lpw(0, -2, 1));
+        Ui.margins(left, Ui.dp(a, 12), 0, 0, 0);
         card.addView(right, Ui.lp(-2, -2));
         card.setOnClickListener(v -> a.openDetail(b.id));
         return card;
+    }
+
+    static String typeIcon(String type) {
+        if ("Wedding".equals(type)) return "\uD83D\uDC8D";
+        if ("Tour".equals(type)) return "\uD83D\uDDFA\uFE0F";
+        if ("Travel".equals(type)) return "\uD83E\uDDF3";
+        return "\uD83D\uDCCC";
     }
 
     static String route(DataStore.Booking b) {

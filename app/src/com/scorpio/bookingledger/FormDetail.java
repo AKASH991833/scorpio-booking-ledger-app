@@ -7,6 +7,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.util.Calendar;
@@ -22,23 +23,28 @@ public class FormDetail {
         final DataStore.Booking editing = editId == 0 ? null : DataStore.get(a).find(editId);
         pickedPhoto = editing == null ? null : (editing.driverPhoto.length() == 0 ? null : editing.driverPhoto);
 
-        LinearLayout col = Ui.screen(a);
+        LinearLayout root = Ui.screen(a);
+        LinearLayout col = Ui.vcol(a);
         int p = Ui.dp(a, 20);
         col.setPadding(p, p, p, p);
 
         col.addView(Ui.tv(a, editing == null ? "New Booking" : "Edit Booking", 22, Ui.text, Typeface.DEFAULT_BOLD));
-        TextView s0 = new TextView(a); col.addView(s0, Ui.lp(-1, Ui.dp(a, 12)));
+        TextView s0 = new TextView(a); col.addView(s0, Ui.lp(-1, Ui.dp(a, 14)));
 
         final EditText name = Ui.field(a, "e.g. Rahul Sharma", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS | InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
         final EditText phone = Ui.field(a, "10-digit mobile", InputType.TYPE_CLASS_PHONE);
         final EditText address = Ui.field(a, "Customer address", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS | InputType.TYPE_TEXT_VARIATION_POSTAL_ADDRESS);
         final EditText pickup = Ui.field(a, "Pickup location", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
         final EditText drop = Ui.field(a, "Drop location", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
-        final EditText total = Ui.field(a, "Total booking amount (\u20B9)", InputType.TYPE_CLASS_NUMBER);
-        final EditText advance = Ui.field(a, "Advance received (\u20B9)", InputType.TYPE_CLASS_NUMBER);
         final EditText notes = Ui.field(a, "Notes (optional)", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
         final EditText driverName = Ui.field(a, "Driver name", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS | InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
         final EditText driverPhone = Ui.field(a, "Driver mobile", InputType.TYPE_CLASS_PHONE);
+
+        // big amount inputs
+        final LinearLayout totalBox = moneyBox(a);
+        final EditText total = (EditText) totalBox.getChildAt(1);
+        final LinearLayout advBox = moneyBox(a);
+        final EditText advance = (EditText) advBox.getChildAt(1);
 
         if (editing != null) {
             name.setText(editing.name); phone.setText(editing.phone); address.setText(editing.address);
@@ -74,22 +80,27 @@ public class FormDetail {
         }
         paintTypes.run();
 
-        // date pickers
+        // date tiles
         final String[] startD = {editing == null ? Dates.today() : editing.start};
         final String[] endD = {editing == null ? Dates.today() : editing.end};
-        final TextView startBtn = Ui.dateBtn(a, "From:  " + Dates.fmt(startD[0]));
-        final TextView endBtn = Ui.dateBtn(a, "To:      " + Dates.fmt(endD[0]));
-        startBtn.setOnClickListener(v -> pickDate(a, startD[0], (iso) -> { startD[0] = iso; if (endD[0].compareTo(iso) < 0) { endD[0] = iso; endBtn.setText("To:      " + Dates.fmt(iso)); } startBtn.setText("From:  " + Dates.fmt(iso)); }));
-        endBtn.setOnClickListener(v -> pickDate(a, endD[0], (iso) -> { endD[0] = iso; endBtn.setText("To:      " + Dates.fmt(iso)); }));
+        final LinearLayout startTile = dateTile(a, "FROM");
+        final LinearLayout endTile = dateTile(a, "TO");
+        final TextView startTxt = (TextView) startTile.getChildAt(1);
+        final TextView endTxt = (TextView) endTile.getChildAt(1);
+        startTxt.setText(Dates.fmt(startD[0]));
+        endTxt.setText(Dates.fmt(endD[0]));
+        startTile.setOnClickListener(v -> pickDate(a, startD[0], (iso) -> { startD[0] = iso; if (endD[0].compareTo(iso) < 0) { endD[0] = iso; endTxt.setText(Dates.fmt(iso)); } startTxt.setText(Dates.fmt(iso)); }));
+        endTile.setOnClickListener(v -> pickDate(a, endD[0], (iso) -> { endD[0] = iso; endTxt.setText(Dates.fmt(iso)); }));
 
         // driver photo
         photoLabel = Ui.ghostBtn(a, pickedPhoto == null ? "Add driver photo (optional)" : "Driver photo added \u2713", Ui.navy);
         photoLabel.setOnClickListener(v -> a.pickPhoto());
 
-        // balance preview
-        final TextView balPrev = Ui.tv(a, "Balance: \u20B90", 15, Ui.chipAmber, Typeface.DEFAULT_BOLD);
-
-        android.text.TextWatcher tw = new android.text.TextWatcher() {
+        // live balance + paid progress
+        final TextView balPrev = Ui.tv(a, "Balance: \u20B90", 16, Ui.chipAmber, Typeface.DEFAULT_BOLD);
+        final TextView pctTxt = Ui.tv(a, "0% paid", 11, Ui.sub, Typeface.DEFAULT_BOLD);
+        final LinearLayout bar = Ui.progress(a);
+        final android.text.TextWatcher tw = new android.text.TextWatcher() {
             public void beforeTextChanged(CharSequence s, int x, int y, int z) {}
             public void onTextChanged(CharSequence s, int x, int y, int z) {}
             public void afterTextChanged(android.text.Editable s) {
@@ -97,10 +108,14 @@ public class FormDetail {
                 long bal = Math.max(0, t - ad);
                 balPrev.setText("Balance: " + Dates.inr(bal));
                 balPrev.setTextColor(bal <= 0 && t > 0 ? Ui.chipGreen : Ui.chipAmber);
+                int pct = t > 0 ? (int) Math.min(100, ad * 100 / t) : 0;
+                Ui.setProgress(a, bar, pct);
+                pctTxt.setText(pct + "% paid");
             }
         };
         total.addTextChangedListener(tw);
         advance.addTextChangedListener(tw);
+        tw.afterTextChanged(null);
 
         // save
         TextView save = Ui.primaryBtn(a, editing == null ? "Save Booking" : "Update Booking");
@@ -135,29 +150,108 @@ public class FormDetail {
             }
         });
 
-        // layout
-        addLabeled(col, a, "Customer name", name);
-        addLabeled(col, a, "Customer mobile", phone);
-        addLabeled(col, a, "Customer address", address);
-        col.addView(Ui.label(a, "Booking type"));
-        col.addView(typeRow); Ui.margins(typeRow, 0, Ui.dp(a, 6), 0, Ui.dp(a, 10));
-        LinearLayout dates = Ui.hrow(a);
-        dates.addView(startBtn, Ui.lpw(0, -2, 1));
-        TextView dgap = new TextView(a); dates.addView(dgap, Ui.lp(Ui.dp(a, 10), -2));
-        dates.addView(endBtn, Ui.lpw(0, -2, 1));
-        col.addView(Ui.label(a, "Booking dates"));
-        col.addView(dates); Ui.margins(dates, 0, Ui.dp(a, 6), 0, Ui.dp(a, 10));
-        addLabeled(col, a, "Pickup", pickup);
-        addLabeled(col, a, "Drop", drop);
-        addLabeled(col, a, "Total amount", total);
-        addLabeled(col, a, "Advance paid", advance);
-        col.addView(balPrev); Ui.margins(balPrev, Ui.dp(a, 4), 0, 0, Ui.dp(a, 10));
-        addLabeled(col, a, "Driver name", driverName);
-        addLabeled(col, a, "Driver mobile", driverPhone);
-        col.addView(photoLabel); Ui.margins(photoLabel, 0, 0, 0, Ui.dp(a, 10));
-        addLabeled(col, a, "Notes", notes);
-        col.addView(save); Ui.margins(save, 0, Ui.dp(a, 6), 0, Ui.dp(a, 24));
-        return Ui.scrollWrap(a, col);
+        // ---- layout: sectioned premium cards ----
+        LinearLayout cCust = Ui.section(a, "\uD83D\uDC64", "CUSTOMER");
+        addLabeled(cCust, a, "Full name", name);
+        addLabeled(cCust, a, "Mobile", phone);
+        addLabeled(cCust, a, "Address", address);
+        spacedSection(col, a, cCust);
+
+        LinearLayout cTrip = Ui.section(a, "\uD83D\uDE97", "TRIP");
+        cTrip.addView(Ui.label(a, "Booking type"));
+        cTrip.addView(typeRow); Ui.margins(typeRow, 0, Ui.dp(a, 6), 0, Ui.dp(a, 12));
+        cTrip.addView(Ui.label(a, "Booking dates"));
+        LinearLayout tiles = Ui.hrow(a);
+        tiles.addView(startTile, Ui.lpw(0, -2, 1));
+        TextView tgap = new TextView(a); tiles.addView(tgap, Ui.lp(Ui.dp(a, 10), -2));
+        tiles.addView(endTile, Ui.lpw(0, -2, 1));
+        cTrip.addView(tiles); Ui.margins(tiles, 0, Ui.dp(a, 6), 0, Ui.dp(a, 12));
+        addLabeled(cTrip, a, "Pickup", pickup);
+        addLabeled(cTrip, a, "Drop", drop);
+        spacedSection(col, a, cTrip);
+
+        LinearLayout cPay = Ui.section(a, "\uD83D\uDCB3", "PAYMENT");
+        cPay.addView(Ui.label(a, "Total amount"));
+        cPay.addView(totalBox); Ui.margins(totalBox, 0, Ui.dp(a, 6), 0, Ui.dp(a, 10));
+        cPay.addView(Ui.label(a, "Advance paid"));
+        cPay.addView(advBox); Ui.margins(advBox, 0, Ui.dp(a, 6), 0, Ui.dp(a, 4));
+        LinearLayout balRow = Ui.hrow(a);
+        TextView balLbl = Ui.tv(a, "Balance", 14, Ui.sub, Ui.medium());
+        balRow.addView(balLbl, Ui.lpw(0, -2, 1));
+        balRow.addView(balPrev, Ui.lp(-2, -2));
+        cPay.addView(balRow); Ui.margins(balRow, 0, Ui.dp(a, 6), 0, 0);
+        LinearLayout progRow = Ui.hrow(a);
+        progRow.addView(bar, Ui.lpw(0, -2, 1));
+        progRow.addView(pctTxt, Ui.lp(-2, -2));
+        Ui.margins(pctTxt, Ui.dp(a, 8), 0, 0, 0);
+        cPay.addView(progRow); Ui.margins(progRow, 0, Ui.dp(a, 10), 0, 0);
+        spacedSection(col, a, cPay);
+
+        LinearLayout cDrv = Ui.section(a, "\uD83E\uDDD1", "DRIVER");
+        addLabeled(cDrv, a, "Driver name", driverName);
+        addLabeled(cDrv, a, "Driver mobile", driverPhone);
+        cDrv.addView(photoLabel);
+        spacedSection(col, a, cDrv);
+
+        LinearLayout cNotes = Ui.section(a, "\uD83D\uDCDD", "NOTES");
+        cNotes.addView(notes);
+        spacedSection(col, a, cNotes);
+
+        TextView bottomSpace = new TextView(a);
+        col.addView(bottomSpace, Ui.lp(-1, Ui.dp(a, 4)));
+
+        ScrollView sv = new ScrollView(a);
+        sv.addView(col);
+        root.addView(sv, new LinearLayout.LayoutParams(-1, 0, 1));
+
+        LinearLayout bottom = Ui.vcol(a);
+        bottom.setBackgroundColor(Ui.bg);
+        int bp = Ui.dp(a, 20);
+        bottom.setPadding(bp, Ui.dp(a, 10), bp, Ui.dp(a, 14));
+        bottom.addView(save);
+        root.addView(bottom);
+        return root;
+    }
+
+    static LinearLayout moneyBox(MainActivity a) {
+        LinearLayout mf = Ui.hrow(a);
+        mf.setBackground(Ui.round(Ui.fieldBg, Ui.dp(a, 14)));
+        int p = Ui.dp(a, 14);
+        mf.setPadding(p, Ui.dp(a, 12), p, Ui.dp(a, 12));
+        TextView rs = Ui.tv(a, "\u20B9", 18, Ui.sub, Typeface.DEFAULT_BOLD);
+        mf.addView(rs);
+        EditText e = new EditText(a);
+        e.setHint("0");
+        e.setHintTextColor(Ui.sub);
+        e.setTextColor(Ui.text);
+        e.setTextSize(22);
+        e.setTypeface(Typeface.DEFAULT_BOLD);
+        e.setInputType(InputType.TYPE_CLASS_NUMBER);
+        e.setSingleLine(true);
+        e.setBackground(null);
+        mf.addView(e, Ui.lpw(0, -2, 1));
+        Ui.margins(e, Ui.dp(a, 8), 0, 0, 0);
+        return mf;
+    }
+
+    static LinearLayout dateTile(MainActivity a, String lbl) {
+        LinearLayout tile = Ui.vcol(a);
+        tile.setBackground(Ui.round(Ui.fieldBg, Ui.dp(a, 14)));
+        int p = Ui.dp(a, 12);
+        tile.setPadding(p, p, p, p);
+        TextView l = Ui.tv(a, lbl, 10, Ui.sub, Typeface.DEFAULT_BOLD);
+        l.setLetterSpacing(0.08f);
+        TextView d = Ui.tv(a, "", 15, Ui.text, Typeface.DEFAULT_BOLD);
+        TextView h = Ui.tv(a, "Tap to change", 10, Ui.navy, Ui.medium());
+        tile.addView(l); tile.addView(d); tile.addView(h);
+        Ui.margins(d, 0, Ui.dp(a, 3), 0, 0);
+        Ui.margins(h, 0, Ui.dp(a, 2), 0, 0);
+        return tile;
+    }
+
+    static void spacedSection(LinearLayout col, android.content.Context c, View v) {
+        col.addView(v);
+        Ui.margins(v, 0, 0, 0, Ui.dp(c, 12));
     }
 
     static void onPhotoPicked(String path) {
@@ -196,28 +290,50 @@ public class FormDetail {
         col.setPadding(p, p, p, p);
         if (b == null) { col.addView(Ui.tv(a, "Booking not found", 16, Ui.sub, Ui.medium())); return col; }
 
+        // hero card: name, id, status + calendar tile, route, dates, type
+        LinearLayout hero = Ui.cardView(a);
         LinearLayout head = Ui.hrow(a);
         LinearLayout hleft = Ui.vcol(a);
         hleft.addView(Ui.tv(a, b.name, 22, Ui.text, Typeface.DEFAULT_BOLD));
         hleft.addView(Ui.tv(a, CardRenderer.bookingId(b.id), 12, Ui.sub, Typeface.DEFAULT_BOLD));
         head.addView(hleft, Ui.lpw(0, -2, 1));
         head.addView(Ui.chip(a, b.status()), Ui.lp(-2, -2));
-        Screens.spaced(col, a, head);
+        hero.addView(head);
+        Ui.margins(head, 0, 0, 0, Ui.dp(a, 12));
 
-        LinearLayout card = Ui.cardView(a);
-        row(card, a, "Dates", Dates.range(b.start, b.end));
-        row(card, a, "Type", b.type);
-        if (Screens.route(b).length() > 0) row(card, a, "Route", Screens.route(b));
-        if (b.phone.length() > 0) row(card, a, "Mobile", b.phone);
-        if (b.address.length() > 0) row(card, a, "Address", b.address);
-        if (b.driverName.length() > 0) row(card, a, "Driver", b.driverName + (b.driverPhone.length() > 0 ? " (" + b.driverPhone + ")" : ""));
-        if (b.notes.length() > 0) row(card, a, "Notes", b.notes);
-        Screens.spaced(col, a, card);
+        LinearLayout trip = Ui.hrow(a);
+        trip.setGravity(Gravity.CENTER_VERTICAL);
+        trip.addView(calTile(a, b.start));
+        LinearLayout tcol = Ui.vcol(a);
+        String route = Screens.route(b);
+        if (route.length() > 0) tcol.addView(Ui.tv(a, route, 17, Ui.text, Typeface.DEFAULT_BOLD));
+        tcol.addView(Ui.tv(a, Dates.range(b.start, b.end), 14, Ui.text, Typeface.DEFAULT_BOLD));
+        tcol.addView(Ui.tv(a, b.type, 12, Ui.sub, Ui.medium()));
+        trip.addView(tcol, Ui.lpw(0, -2, 1));
+        Ui.margins(tcol, Ui.dp(a, 12), 0, 0, 0);
+        hero.addView(trip);
+        Screens.spaced(col, a, hero);
 
-        LinearLayout money = Ui.cardView(a);
+        LinearLayout info = Ui.section(a, "\uD83D\uDC64", "DETAILS");
+        if (b.phone.length() > 0) row(info, a, "Mobile", b.phone);
+        if (b.address.length() > 0) row(info, a, "Address", b.address);
+        if (b.driverName.length() > 0) row(info, a, "Driver", b.driverName + (b.driverPhone.length() > 0 ? " (" + b.driverPhone + ")" : ""));
+        if (b.notes.length() > 0) row(info, a, "Notes", b.notes);
+        Screens.spaced(col, a, info);
+
+        LinearLayout money = Ui.section(a, "\uD83D\uDCB3", "PAYMENT");
         mrow(money, a, "Total amount", Dates.inr(b.total), Ui.text);
         mrow(money, a, "Advance paid", Dates.inr(b.advance), Ui.chipGreen);
         mrow(money, a, "Balance pending", Dates.inr(b.balance()), b.balance() > 0 ? Ui.chipRed : Ui.chipGreen);
+        LinearLayout progRow = Ui.hrow(a);
+        LinearLayout bar = Ui.progress(a);
+        int pct = b.total > 0 ? (int) Math.min(100, Math.min(b.advance, b.total) * 100 / b.total) : 0;
+        Ui.setProgress(a, bar, pct);
+        TextView pctTxt = Ui.tv(a, pct + "% paid", 11, Ui.sub, Typeface.DEFAULT_BOLD);
+        progRow.addView(bar, Ui.lpw(0, -2, 1));
+        progRow.addView(pctTxt, Ui.lp(-2, -2));
+        Ui.margins(pctTxt, Ui.dp(a, 8), 0, 0, 0);
+        money.addView(progRow); Ui.margins(progRow, 0, Ui.dp(a, 10), 0, 0);
         Screens.spaced(col, a, money);
 
         // contact actions
@@ -256,6 +372,26 @@ public class FormDetail {
         Screens.spaced(col, a, c3);
 
         return Ui.scrollWrap(a, col);
+    }
+
+    static LinearLayout calTile(MainActivity a, String iso) {
+        String day = "-", mon = "";
+        try {
+            java.util.Date dt = Dates.ISO.parse(iso.substring(0, 10));
+            day = new java.text.SimpleDateFormat("d", java.util.Locale.US).format(dt);
+            mon = new java.text.SimpleDateFormat("MMM", java.util.Locale.US).format(dt).toUpperCase(java.util.Locale.US);
+        } catch (Exception ignored) {}
+        LinearLayout tile = Ui.vcol(a);
+        tile.setGravity(Gravity.CENTER);
+        tile.setBackground(Ui.round(Ui.fieldBg, Ui.dp(a, 12)));
+        tile.setMinimumWidth(Ui.dp(a, 56));
+        int pv = Ui.dp(a, 8);
+        tile.setPadding(0, pv, 0, pv);
+        tile.addView(Ui.tv(a, day, 22, Ui.text, Typeface.DEFAULT_BOLD));
+        tile.addView(Ui.tv(a, mon, 11, Ui.navy, Typeface.DEFAULT_BOLD));
+        for (int i = 0; i < tile.getChildCount(); i++)
+            ((TextView) tile.getChildAt(i)).setGravity(Gravity.CENTER);
+        return tile;
     }
 
     static void row(LinearLayout card, android.content.Context c, String k, String v) {

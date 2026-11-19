@@ -169,6 +169,43 @@ public class Ui {
 
     public static void toast(Context c, String s) { Toast.makeText(c, s, Toast.LENGTH_LONG).show(); }
 
+    /** Premium section card with icon + caps title. */
+    public static LinearLayout section(Context c, String icon, String title) {
+        LinearLayout card = cardView(c);
+        LinearLayout h = hrow(c);
+        TextView ic = tv(c, icon, 14, navy, medium());
+        ic.setBackground(round(fieldBg, dp(c, 10)));
+        int p = dp(c, 8); ic.setPadding(p, p, p, p);
+        h.addView(ic);
+        TextView t = tv(c, title, 12, sub, Typeface.DEFAULT_BOLD);
+        t.setLetterSpacing(0.08f);
+        h.addView(t);
+        margins(t, dp(c, 10), 0, 0, 0);
+        card.addView(h);
+        margins(h, 0, 0, 0, dp(c, 12));
+        return card;
+    }
+
+    /** Slim progress track; call setProgress to fill. */
+    public static LinearLayout progress(Context c) {
+        LinearLayout bar = hrow(c);
+        bar.setBackground(round(line, dp(c, 5)));
+        View fill = new View(c); fill.setTag("fill");
+        View rest = new View(c); rest.setTag("rest");
+        bar.addView(fill, new LinearLayout.LayoutParams(0, dp(c, 8), 0.001f));
+        bar.addView(rest, new LinearLayout.LayoutParams(0, dp(c, 8), 100f));
+        return bar;
+    }
+
+    public static void setProgress(Context c, LinearLayout bar, int pct) {
+        if (pct < 0) pct = 0; if (pct > 100) pct = 100;
+        View fill = bar.findViewWithTag("fill");
+        View rest = bar.findViewWithTag("rest");
+        fill.setBackground(round(navy, dp(c, 5)));
+        fill.setLayoutParams(new LinearLayout.LayoutParams(0, dp(c, 8), Math.max(pct, 0.001f)));
+        rest.setLayoutParams(new LinearLayout.LayoutParams(0, dp(c, 8), Math.max(100 - pct, 0.001f)));
+    }
+
     public static void confirm(Context c, String title, String msg, String okLabel, final Runnable onOk) {
         new AlertDialog.Builder(c)
                 .setTitle(title)
