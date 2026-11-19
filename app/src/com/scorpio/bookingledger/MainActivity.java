@@ -20,7 +20,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 
 public class MainActivity extends Activity {
-    static final int REQ_EXPORT = 11, REQ_IMPORT = 12, REQ_PHOTO = 13;
+    static final int REQ_EXPORT = 11, REQ_IMPORT = 12, REQ_PHOTO = 13, REQ_PAYQR = 14;
 
     FrameLayout content;
     LinearLayout navBar;
@@ -104,7 +104,24 @@ public class MainActivity extends Activity {
     SharedPreferences prefs() { return getSharedPreferences("settings", 0); }
     String getBizName() { return prefs().getString("biz_name", "Scorpio Tours & Travels"); }
     String getBizPhone() { return prefs().getString("biz_phone", "919918331262"); }
-    void setBiz(String n, String p) { prefs().edit().putString("biz_name", n).putString("biz_phone", p).apply(); }
+    String getVehicle() { return prefs().getString("vehicle", "Mahindra Scorpio S11"); }
+    String getPlate() { return prefs().getString("plate", ""); }
+    String getUpi() { return prefs().getString("upi", ""); }
+    String getPayQrPath() { return prefs().getString("payqr_path", ""); }
+    void setBiz(String n, String p, String v, String pl, String upi) {
+        prefs().edit().putString("biz_name", n).putString("biz_phone", p)
+                .putString("vehicle", v).putString("plate", pl)
+                .putString("upi", upi).apply();
+    }
+    void setPayQrPath(String path) { prefs().edit().putString("payqr_path", path).apply(); }
+
+    CardRenderer.Settings cardSettings() {
+        CardRenderer.Settings s = new CardRenderer.Settings();
+        s.bizName = getBizName(); s.bizPhone = getBizPhone();
+        s.vehicle = getVehicle(); s.plate = getPlate();
+        s.upiId = getUpi(); s.payQrPath = getPayQrPath();
+        return s;
+    }
 
     // ----- customer / driver contact -----
     void openWhatsApp(String phone) {
@@ -124,8 +141,8 @@ public class MainActivity extends Activity {
     // ----- booking card share -----
     void shareCard(DataStore.Booking b, boolean pdf) {
         try {
-            File f = pdf ? CardRenderer.pdf(this, b, getBizName(), getBizPhone())
-                         : CardRenderer.png(this, b, getBizName(), getBizPhone());
+            File f = pdf ? CardRenderer.pdf(this, b, cardSettings())
+                         : CardRenderer.png(this, b, cardSettings());
             Uri uri = Uri.parse("content://com.scorpio.bookingledger.share/" + f.getName());
             Intent send = new Intent(Intent.ACTION_SEND);
             send.setType(pdf ? "application/pdf" : "image/png");
@@ -143,6 +160,14 @@ public class MainActivity extends Activity {
         i.addCategory(Intent.CATEGORY_OPENABLE);
         i.setType("image/*");
         startActivityForResult(i, REQ_PHOTO);
+    }
+
+    // ----- payment QR image -----
+    void pickPayQr() {
+        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("image/*");
+        startActivityForResult(i, REQ_PAYQR);
     }
 
     // ----- backup -----
@@ -184,18 +209,18 @@ public class MainActivity extends Activity {
                         "This replaces ALL current bookings with the backup file. Continue?",
                         "Replace",
                         () -> { DataStore.get(this).fromJson(json); DataStore.get(this).save(); Ui.toast(this, "Backup restored"); render(); });
-            } else if (req == REQ_PHOTO) {
+            } else if (req == REQ_PHOTO || req == REQ_PAYQR) {
                 InputStream in = getContentResolver().openInputStream(uri);
                 File dir = new File(getFilesDir(), "drivers");
                 dir.mkdirs();
-                File f = new File(dir, "driver-" + System.currentTimeMillis() + ".jpg");
+                File f = new File(dir, (req == REQ_PAYQR ? "payqr" : "driver-" + System.currentTimeMillis()) + ".jpg");
                 FileOutputStream out = new FileOutputStream(f);
                 byte[] buf = new byte[8192];
                 int r;
                 while ((r = in.read(buf)) > 0) out.write(buf, 0, r);
                 in.close(); out.close();
-                FormDetail.onPhotoPicked(f.getAbsolutePath());
-                Ui.toast(this, "Photo added");
+                if (req == REQ_PAYQR) { setPayQrPath(f.getAbsolutePath()); Ui.toast(this, "Payment QR saved"); }
+                else { FormDetail.onPhotoPicked(f.getAbsolutePath()); Ui.toast(this, "Photo added"); }
             }
         } catch (Exception e) {
             Ui.toast(this, "Failed: " + e.getMessage());

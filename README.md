@@ -9,9 +9,10 @@ A personal, fully offline Android booking ledger for a Mahindra Scorpio S11 rent
 - **Calendar view** - month grid with booked days marked; days with more than one booking are flagged; tap any day to see its bookings.
 - **Dashboard** - total booked value, advance received, balance pending, total bookings, and the next 5 upcoming bookings at a glance.
 - **Search** - find any booking by customer name or phone number. Status chips: PAID / PARTIAL / PENDING.
-- **Shareable booking card** - a professional navy/white booking confirmation card (PNG or PDF) for the customer: business name, Scorpio S11 and booking type, dates, customer name/address/phone, route, driver name, number and photo, advance paid and pending balance. Share straight to WhatsApp.
+- **Shareable booking card** - a premium landscape "Midnight Glass" booking confirmation card (PNG or PDF) for the customer: business name and logo mark, booking ID, prominent travel dates, route, customer name/address/phone, Scorpio S11 with number plate, driver name, number and photo, payment breakdown (total / advance / balance) with a progress bar, paid stamp, terms, signature block and a scannable **UPI pay QR** so the customer can pay the balance on the spot. Share straight to WhatsApp. Generated fully offline.
 - **Driver details** - driver name, mobile and photo per booking (photo appears on the booking card).
 - **WhatsApp / Call buttons** - one tap to WhatsApp or call the customer.
+- **UPI payments** - set your UPI ID once (or upload your own pay QR image); every booking card carries a scannable QR pre-filled with the pending balance, booking ID and business name.
 - **Backup & restore** - export everything to a JSON file (Downloads, Drive, anywhere) and restore it later. All data stays on the phone.
 - **Dark & light mode**, premium navy/white design.
 - **100% offline** - no internet permission, no account, no server, no ads, no cost. Your data never leaves the phone.

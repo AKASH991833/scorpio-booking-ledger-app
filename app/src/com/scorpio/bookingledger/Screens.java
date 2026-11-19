@@ -271,13 +271,33 @@ public class Screens {
         bizPhone.setText(a.getBizPhone());
         bizCard.addView(Ui.label(a, "Contact number"));
         bizCard.addView(bizPhone);
+        TextView b3 = new TextView(a); bizCard.addView(b3, Ui.lp(-1, Ui.dp(a, 8)));
+        final EditText vehicle = Ui.field(a, "Vehicle (e.g. Mahindra Scorpio S11)", android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+        vehicle.setText(a.getVehicle());
+        bizCard.addView(Ui.label(a, "Vehicle"));
+        bizCard.addView(vehicle);
+        TextView b4 = new TextView(a); bizCard.addView(b4, Ui.lp(-1, Ui.dp(a, 8)));
+        final EditText plate = Ui.field(a, "Number plate (e.g. MH 04 AB 1234)", android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
+        plate.setText(a.getPlate());
+        bizCard.addView(Ui.label(a, "Number plate"));
+        bizCard.addView(plate);
+        TextView b5 = new TextView(a); bizCard.addView(b5, Ui.lp(-1, Ui.dp(a, 8)));
+        final EditText upi = Ui.field(a, "UPI ID for payments (e.g. name@okhdfcbank)", android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+        upi.setText(a.getUpi());
+        bizCard.addView(Ui.label(a, "UPI ID (for Scan-to-pay QR on card)"));
+        bizCard.addView(upi);
         TextView saveBiz = Ui.primaryBtn(a, "Save business details");
         int m8 = Ui.dp(a, 12);
         bizCard.addView(saveBiz); Ui.margins(saveBiz, 0, m8, 0, 0);
         saveBiz.setOnClickListener(v -> {
-            a.setBiz(bizName.getText().toString().trim(), bizPhone.getText().toString().trim());
+            a.setBiz(bizName.getText().toString().trim(), bizPhone.getText().toString().trim(),
+                    vehicle.getText().toString().trim(), plate.getText().toString().trim(),
+                    upi.getText().toString().trim());
             Ui.toast(a, "Saved");
         });
+        TextView qrBtn = Ui.ghostBtn(a, a.getPayQrPath().length() == 0 ? "Upload your own payment QR image instead" : "Payment QR image saved \u2713  (tap to replace)", Ui.navy);
+        bizCard.addView(qrBtn); Ui.margins(qrBtn, 0, m8, 0, 0);
+        qrBtn.setOnClickListener(v -> a.pickPayQr());
         spaced(col, a, bizCard);
 
         // backup

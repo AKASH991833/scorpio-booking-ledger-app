@@ -197,7 +197,10 @@ public class FormDetail {
         if (b == null) { col.addView(Ui.tv(a, "Booking not found", 16, Ui.sub, Ui.medium())); return col; }
 
         LinearLayout head = Ui.hrow(a);
-        head.addView(Ui.tv(a, b.name, 22, Ui.text, Typeface.DEFAULT_BOLD), Ui.lpw(0, -2, 1));
+        LinearLayout hleft = Ui.vcol(a);
+        hleft.addView(Ui.tv(a, b.name, 22, Ui.text, Typeface.DEFAULT_BOLD));
+        hleft.addView(Ui.tv(a, CardRenderer.bookingId(b.id), 12, Ui.sub, Typeface.DEFAULT_BOLD));
+        head.addView(hleft, Ui.lpw(0, -2, 1));
         head.addView(Ui.chip(a, b.status()), Ui.lp(-2, -2));
         Screens.spaced(col, a, head);
 
