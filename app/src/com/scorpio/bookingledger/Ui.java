@@ -128,7 +128,7 @@ public class Ui {
 
     public static TextView chip(Context c, String status) {
         int fg, bgr;
-        if ("PAID".equals(status)) { fg = chipGreen; bgr = chipGreenBg; }
+        if ("PAID".equals(status) || "CLEARED".equals(status)) { fg = chipGreen; bgr = chipGreenBg; }
         else if ("PARTIAL".equals(status)) { fg = chipAmber; bgr = chipAmberBg; }
         else { fg = chipRed; bgr = chipRedBg; }
         TextView t = tv(c, status, 11, fg, Typeface.DEFAULT_BOLD);

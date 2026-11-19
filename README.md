@@ -10,6 +10,7 @@ A personal, fully offline Android booking ledger for a Mahindra Scorpio S11 rent
 - **Dashboard** - total booked value, advance received, balance pending, total bookings, and the next 5 upcoming bookings at a glance.
 - **Search** - find any booking by customer name or phone number. Status chips: PAID / PARTIAL / PENDING.
 - **Shareable booking card** - a premium landscape "Midnight Glass" booking confirmation card (PNG or PDF) for the customer: business name and logo mark, booking ID, prominent travel dates, route, customer name/address/phone, Scorpio S11 with number plate, driver name, number and photo, payment breakdown (total / advance / balance) with a progress bar, paid stamp, terms, signature block and a scannable **UPI pay QR** so the customer can pay the balance on the spot. Share straight to WhatsApp. Generated fully offline.
+- **Customers** - every customer grouped by phone number with their full booking history, total billed, total paid and pending balance, with a clear CLEARED / PENDING status. Search by name or phone, tap to see all their bookings, call or WhatsApp them, and send a pre-filled WhatsApp payment reminder with the exact pending amount in one tap.
 - **Driver details** - driver name, mobile and photo per booking (photo appears on the booking card).
 - **WhatsApp / Call buttons** - one tap to WhatsApp or call the customer.
 - **UPI payments** - set your UPI ID once (or upload your own pay QR image); every booking card carries a scannable QR pre-filled with the pending balance, booking ID and business name.
@@ -29,7 +30,7 @@ Requires Android 7.0 (API 24) or newer.
 
 | Home | Calendar | Booking detail (dark) | Booking card |
 |---|---|---|---|
-| ![Home](screenshots/home.png) | ![Calendar](screenshots/calendar.png) | ![Detail](screenshots/detail.png) | ![Card](screenshots/card.png) |
+| ![Home](screenshots/home.png) | ![Customers](screenshots/customers.png) | ![Calendar](screenshots/calendar.png) | ![Detail](screenshots/detail.png) | ![Card](screenshots/card.png) |
 
 ## Tech
 

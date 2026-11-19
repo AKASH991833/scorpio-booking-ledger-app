@@ -24,9 +24,10 @@ public class MainActivity extends Activity {
 
     FrameLayout content;
     LinearLayout navBar;
-    int tab = 0;          // 0 home, 1 bookings, 2 calendar, 3 more
-    int view = 0;         // 0 tab, 1 form, 2 detail
+    int tab = 0;          // 0 home, 1 bookings, 2 customers, 3 calendar, 4 more
+    int view = 0;         // 0 tab, 1 form, 2 detail, 3 customer detail
     long editId = 0, detailId = 0;
+    String customerKey = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,10 +57,12 @@ public class MainActivity extends Activity {
         content.removeAllViews();
         if (view == 1) content.addView(FormDetail.form(this, editId));
         else if (view == 2) content.addView(FormDetail.detail(this, detailId));
+        else if (view == 3) content.addView(Customers.detail(this, customerKey));
         else {
             if (tab == 0) content.addView(Screens.home(this));
             else if (tab == 1) content.addView(Screens.list(this));
-            else if (tab == 2) content.addView(Screens.calendar(this));
+            else if (tab == 2) content.addView(Customers.customers(this));
+            else if (tab == 3) content.addView(Screens.calendar(this));
             else content.addView(Screens.settings(this));
         }
         buildNav();
@@ -69,9 +72,9 @@ public class MainActivity extends Activity {
         navBar.removeAllViews();
         navBar.setBackgroundColor(Ui.navBg);
         navBar.setPadding(0, Ui.dp(this, 6), 0, Ui.dp(this, 10));
-        String[] icons = {"\uD83C\uDFE0", "\uD83D\uDCCB", "\uD83D\uDCC5", "\u2630"};
-        String[] labels = {"Home", "Bookings", "Calendar", "More"};
-        for (int i = 0; i < 4; i++) {
+        String[] icons = {"\uD83C\uDFE0", "\uD83D\uDCCB", "\uD83D\uDC65", "\uD83D\uDCC5", "\u2630"};
+        String[] labels = {"Home", "Bookings", "Customers", "Calendar", "More"};
+        for (int i = 0; i < 5; i++) {
             final int idx = i;
             LinearLayout cell = Ui.vcol(this);
             cell.setGravity(Gravity.CENTER);
@@ -91,6 +94,7 @@ public class MainActivity extends Activity {
 
     void openForm(long id) { editId = id; view = 1; render(); }
     void openDetail(long id) { detailId = id; view = 2; render(); }
+    void openCustomer(String key) { customerKey = key; view = 3; render(); }
     void goBack() { view = 0; render(); }
 
     @Override
@@ -124,12 +128,27 @@ public class MainActivity extends Activity {
     }
 
     // ----- customer / driver contact -----
-    void openWhatsApp(String phone) {
+    void openWhatsApp(String phone) { openWhatsApp(phone, null); }
+
+    void openWhatsApp(String phone, String text) {
         String d = phone.replaceAll("[^0-9]", "");
         if (d.length() == 10) d = "91" + d;
         if (d.length() < 10) { Ui.toast(this, "No valid mobile number"); return; }
-        try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/" + d))); }
+        String url = "https://wa.me/" + d;
+        if (text != null) {
+            try { url += "?text=" + java.net.URLEncoder.encode(text, "UTF-8"); }
+            catch (java.io.UnsupportedEncodingException ignored) {}
+        }
+        try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); }
         catch (ActivityNotFoundException e) { Ui.toast(this, "WhatsApp not installed"); }
+    }
+
+    void sendPaymentReminder(Customers.Agg g) {
+        String msg = "Namaste " + (g.name.length() > 0 ? g.name : "") + "! Gentle reminder from "
+                + getBizName() + ": your pending balance of " + Dates.inr(g.pending)
+                + " across " + g.count + (g.count == 1 ? " booking" : " bookings")
+                + " is due. Please pay at your convenience. Thank you!";
+        openWhatsApp(g.phone, msg);
     }
 
     void callNumber(String phone) {
